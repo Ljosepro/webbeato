@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalizador de Controlador MIDI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <main class="main-container">
+        <div id="canvas-container">
+            <canvas id="webgl"></canvas>
+        </div>
+    </main>
+
+    <div id="ui-container">
+        <div class="ui-triggers-column">
+            <div class="view-controls">
+                <button id="btn-normal" class="view-btn active" title="Vista General">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12C2.73 16.39 7 19.5 12 19.5C17 19.5 21.27 16.39 23 12C21.27 7.61 17 4.5 12 4.5M12 17C9.24 17 7 14.76 7 12C7 9.24 9.24 7 12 7C14.76 7 17 9.24 17 12C17 14.76 14.76 17 12 17M12 9C10.34 9 9 10.34 9 12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12C15 10.34 13.66 9 12 9Z"></path></svg>
+                </button>
+                <button id="btn-chasis" class="view-btn" title="Chasis">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 3H21V21H3V3M5 5V19H19V5H5Z"></path></svg>
+                </button>
+                <button id="btn-buttons" class="view-btn" title="Botones">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 4H8V8H4V4M10 4H14V8H10V4M16 4H20V8H16V4M4 10H8V14H4V10M10 10H14V14H10V10M16 10H20V14H16V10M4 16H8V20H4V16M10 16H14V20H10V16M16 16H20V20H16V16Z"></path></svg>
+                </button>
+                <button id="btn-knobs" class="view-btn" title="Knobs">
+                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 16.5C10 18.98 12.02 21 14.5 21S19 18.98 19 16.5C19 14.02 16.98 12 14.5 12S10 14.02 10 16.5M5 7.5C5 9.98 7.02 12 9.5 12S14 9.98 14 7.5C14 5.02 11.98 3 9.5 3S5 5.02 5 7.5Z"></path></svg>
+                </button>
+            </div>
+        </div>
+        <div class="ui-content">
+            <div class="ui-header">
+                <img src="models/logo.png" alt="Logo" class="header-logo">
+                <h2>CONFIGURATOR</h2>
+            </div>
+            <div class="ui-section" id="color-section">
+                <p>ELIGE UN COLOR</p>
+                <div id="color-palette"></div>
+            </div>
+            <div class="ui-section" id="buy-section">
+                 <button id="btn-comprar" class="comprar-btn">COMPRAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIBRERÍAS DE JAVASCRIPT -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- LIBRERÍA AÑADIDA PARA ILUMINACIÓN HDRI -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/RGBELoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>
