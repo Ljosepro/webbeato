@@ -1,0 +1,181 @@
+/* --- TEMA Y COLORES GLOBALES --- */
+/* --- TEMA 1: NEÓN FUTURISTA --- */
+/* --- TEMA Y COLORES GLOBALES: TEMA "AURORA NEÓN" --- */
+/* --- TEMA Y COLORES GLOBALES: TEMA "GRAFITO Y ORO" --- */
+:root {
+    --panel-bg: #1a1a1a; /* Un gris carbón muy oscuro */
+    --accent-color: #c884f8; /* Tu amarillo/oro como acento principal */
+    --accent-glow: rgba(173, 116, 248, 0.4); /* Brillo dorado */
+    --text-color: #E0E0E0; /* Un blanco suave para el texto */
+    --border-color: #333333; /* Un borde gris oscuro */
+    --border-radius: 8px;
+    --panel-width-collapsed: 100px;
+    --panel-width-expanded: 400px;
+}
+
+/* Reemplaza estas dos reglas en tu archivo */
+
+.comprar-btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.1em;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: #000; /* Texto negro para que contraste con el dorado */
+    background-color: var(--accent-color); /* Fondo dorado */
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    margin-top: auto;
+}
+
+.comprar-btn:hover { 
+    background-color: #ffec80; /* Un dorado más claro al pasar el ratón */
+    transform: scale(1.02);
+    box-shadow: 0 0 20px var(--accent-glow);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body, html {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #000; color: var(--text-color); overflow: hidden;
+}
+
+/* --- ESTRUCTURA PRINCIPAL --- */
+.main-container { display: flex; width: 100%; height: 100%; }
+
+/* ============================================= */
+/* --- CONTENEDOR DEL CANVAS CON FONDO DEGRADADO --- */
+/* ============================================= */
+#canvas-container { 
+    flex-grow: 1; 
+    height: 100%; 
+    background: linear-gradient(to top, #1a1a1a, #4e4e4e); 
+}
+#webgl { width: 100%; height: 100%; display: block; }
+
+/* --- PANEL DE UI EXPANSBILE --- */
+#ui-container {
+    position: fixed;
+    top: 0; right: 0; height: 100vh;
+    background-color: var(--panel-bg);
+    border-left: 1px solid var(--border-color);
+    /* --- LÍNEA CORREGIDA PARA EL EFECTO DE BRILLO --- */
+    /* Usa el color de brillo de tu tema para crear un "glow" */
+    box-shadow: -3px 0 25px 3px var(--accent-glow);
+    width: var(--panel-width-collapsed);
+    transition: width 0.4s ease-in-out;
+    display: flex;
+    overflow: hidden;
+}
+#ui-container.open { width: var(--panel-width-expanded); }
+.ui-triggers-column {
+    width: var(--panel-width-collapsed);
+    padding: 25px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+.ui-content {
+    width: calc(var(--panel-width-expanded) - var(--panel-width-collapsed));
+    padding: 25px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- ENCABEZADO Y OTROS --- */
+.ui-header { display: flex; align-items: center; justify-content: center; gap: 6px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+.ui-header h2 { margin: 0; font-size: 1.4em; font-weight: 300; color: var(--accent-color); text-shadow: 0 0 8px var(--accent-glow); white-space: nowrap;}
+.header-logo {
+    height: 32px;
+    width: auto;
+    
+    /* --- INICIO DE LA CORRECCIÓN: EFECTO NEÓN --- */
+
+    /* Se apilan varias sombras para crear un brillo realista */
+    /* La función drop-shadow es ideal para logos con transparencias (PNG) */
+    filter: 
+        drop-shadow(0 0 3px var(--accent-glow))
+        drop-shadow(0 0 8px var(--accent-color));
+
+    /* Animación suave para el efecto al pasar el ratón */
+    transition: filter 0.3s ease-in-out;
+}
+
+/* Opcional: Intensifica el brillo cuando el ratón está encima */
+.header-logo:hover {
+    filter: 
+        drop-shadow(0 0 5px var(--accent-glow))
+        drop-shadow(0 0 12px var(--accent-color))
+        drop-shadow(0 0 18px var(--accent-glow));
+}
+.ui-section { margin-top: 25px; }
+.ui-section p { font-weight: 900; font-size: 0.9em; letter-spacing: 1px; text-transform: uppercase; margin: 0 0 12px 0; color: var(--text-color);}
+
+/* --- BOTONES DE VISTA --- */
+.view-controls { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.view-btn { width: 100%; aspect-ratio: 1 / 1; border: 1px solid var(--border-color); background-color: rgba(22, 27, 34, 0.8); backdrop-filter: blur(5px); border-radius: var(--border-radius); cursor: pointer; transition: all 0.2s ease-in-out; display: flex; align-items: center; justify-content: center; padding: 12px; }
+.view-btn:hover { background-color: var(--border-color); border-color: var(--accent-color); }
+.view-btn.active { background-color: var(--accent-color); border-color: var(--accent-color); box-shadow: 0 0 15px var(--accent-glow); }
+.view-btn svg { width: 65%; height: 65%; fill: var(--text-color); transition: fill 0.2s ease-in-out; }
+.view-btn:hover svg { fill: var(--accent-color); }
+.view-btn.active svg { fill: var(--panel-bg); }
+
+/* --- PALETA DE COLORES Y COMPRA --- */
+#color-palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 12px; padding: 15px; background-color: rgba(0,0,0,0.2); border-radius: var(--border-radius); }
+.color-swatch { width: 100%; aspect-ratio: 1 / 1; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all 0.2s ease; box-shadow: inset 0 0 5px rgba(0,0,0,0.4); }
+.color-swatch:hover { transform: scale(1.1); }
+.color-swatch.selected { border-color: var(--accent-color); transform: scale(1.15); box-shadow: 0 0 10px var(--accent-glow); }
+.comprar-btn { width: 100%; padding: 15px; font-size: 1.1em; font-weight: bold; letter-spacing: 2px; color: #fff; background-color: #00aaff; border: none; border-radius: var(--border-radius); cursor: pointer; transition: all 0.2s ease-in-out; margin-top: auto; }
+.comprar-btn:hover { background-color: #0aca0a; transform: scale(1.02); box-shadow: 0 0 20px rgba(11, 57, 79, 0.7); }
+/* ============================================= */
+/* --- ESTILOS PARA MÓVILES (DISEÑO RESPONSIVO) --- */
+/* ============================================= */
+@media (max-width: 768px) {
+
+    /* Cambiamos la dirección del contenedor principal a vertical */
+    .main-container {
+        flex-direction: column;
+        overflow-y: auto; /* Permitimos el scroll vertical en el móvil */
+    }
+
+    /* El panel de UI ahora ocupa todo el ancho */
+    #ui-container {
+        width: 100%;
+        height: auto; /* La altura será automática */
+        position: relative; /* Lo devolvemos al flujo normal de la página */
+        transform: none !important; /* Anulamos la animación de deslizamiento */
+        box-shadow: 0 -5px 15px rgba(0,0,0,0.2); /* Sombra arriba */
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    /* Hacemos que el panel no se expanda/contraiga, siempre será visible */
+    #ui-container.open {
+        width: 100%;
+    }
+
+    .ui-body {
+        /* Volvemos a poner los botones y la paleta en una sola columna */
+        flex-direction: column;
+    }
+
+    .ui-left-column {
+        width: 100%; /* La columna de botones ahora ocupa todo el ancho */
+    }
+
+    .view-controls {
+        /* Los botones de vista ahora se ponen en una fila horizontal */
+        flex-direction: row;
+    }
+    
+    .ui-right-column {
+        display: block !important; /* Nos aseguramos que la columna derecha siempre sea visible */
+    }
+}
