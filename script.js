@@ -155,30 +155,23 @@ function prepareModelParts() {
 
 // --- SECCIÓN 5: LÓGICA DE LA INTERFAZ DE USUARIO (UI) ---
 function setupUI() {
-    document.getElementById('btn-normal').addEventListener('click', () => changeView('normal'));
-    document.getElementById('btn-chasis').addEventListener('click', () => changeView('chasis'));
-    document.getElementById('btn-buttons').addEventListener('click', () => changeView('buttons'));
-    document.getElementById('btn-knobs').addEventListener('click', () => changeView('knobs'));
-
-    // ========================================================
-    // ===== AQUÍ ESTÁ LA LÓGICA DEL BOTÓN 'COMPRAR' ======
-    // ========================================================
-    document.getElementById('btn-comprar').addEventListener('click', () => {
-        // ¡¡RECUERDA CAMBIAR ESTO POR TU EMAIL REAL!!
-        const yourEmail = "tu-email@dominio.com"; 
-        
-        const subject = "Nuevo Pedido de Controlador Personalizado";
-        
-        // Se buscan los nombres de los colores seleccionados para el email
-        const chasisColorName = Object.keys(PALETTES.chasis).find(name => PALETTES.chasis[name].hex === '#' + state.selectable.chasis[0].material.color.getHexString().toLowerCase()) || "No definido";
-        const buttonsColorName = Object.keys(PALETTES.buttons).find(name => PALETTES.buttons[name].hex === '#' + state.selectable.buttons[0].material.color.getHexString().toLowerCase()) || "No definido";
-        const knobsColorName = Object.keys(PALETTES.knobs).find(name => PALETTES.knobs[name].hex === '#' + state.selectable.knobs[0].material.color.getHexString().toLowerCase()) || "No definido";
-
-        const body = `¡Hola!\n\nMe gustaría realizar un pedido con la siguiente configuración:\n\n- Color de Chasis: ${chasisColorName}\n- Color de Botones: ${buttonsColorName}\n- Color de Knobs: ${knobsColorName}\n\nGracias.`;
-        
-        const mailtoLink = `mailto:${yourEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        window.location.href = mailtoLink;
-    });
+   // REEMPLÁZALO CON ESTE NUEVO BLOQUE
+document.getElementById('btn-comprar').addEventListener('click', () => {
+    // 1. Prepara un "paquete" de datos con los colores que el cliente ha elegido.
+    const selectionData = {
+        type: 'addToCart', // Un identificador para que Wix sepa qué hacer con este mensaje.
+        chasis: chosenColors.chasis,
+        buttons: chosenColors.buttons,
+        knobs: chosenColors.knobs
+    };
+    
+    // 2. Envía los datos como un mensaje a la página de Wix que lo contiene.
+    window.parent.postMessage(selectionData, "*");
+    
+    // 3. Muestra una confirmación simple al usuario.
+    console.log("Datos de configuración enviados a Wix:", selectionData);
+    alert("¡Añadido al carrito!");
+});
     // ========================================================
 
     changeView('normal');
