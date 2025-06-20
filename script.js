@@ -155,23 +155,53 @@ function prepareModelParts() {
 
 // --- SECCIÓN 5: LÓGICA DE LA INTERFAZ DE USUARIO (UI) ---
 function setupUI() {
-   // REEMPLÁZALO CON ESTE NUEVO BLOQUE
-document.getElementById('btn-comprar').addEventListener('click', () => {
-    // 1. Prepara un "paquete" de datos con los colores que el cliente ha elegido.
-    const selectionData = {
-        type: 'addToCart', // Un identificador para que Wix sepa qué hacer con este mensaje.
-        chasis: chosenColors.chasis,
-        buttons: chosenColors.buttons,
-        knobs: chosenColors.knobs
-    };
-    
-    // 2. Envía los datos como un mensaje a la página de Wix que lo contiene.
-    window.parent.postMessage(selectionData, "*");
-    
-    // 3. Muestra una confirmación simple al usuario.
-    console.log("Datos de configuración enviados a Wix:", selectionData);
-    alert("¡Añadido al carrito!");
-});
+    document.getElementById('btn-normal').addEventListener('click', () => changeView('normal'));
+    document.getElementById('btn-chasis').addEventListener('click', () => changeView('chasis'));
+    document.getElementById('btn-buttons').addEventListener('click', () => changeView('buttons'));
+    document.getElementById('btn-knobs').addEventListener('click', () => changeView('knobs'));
+    document.getElementById('btn-comprar').addEventListener('click', () => {
+        const yourEmail = "tu-email@dominio.com";
+        const subject = "Nuevo Pedido de Controlador Personalizado";
+        const body = `¡Hola!\n\nMe gustaría realizar un pedido con la siguiente configuración:\n\n- Chasis: ${chosenColors.chasis}\n- Botones: ${chosenColors.buttons}\n- Knobs: ${chosenColors.knobs}\n\nGracias.`;
+        const mailtoLink = `mailto:${yourEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.location.href = mailtoLink;
+    });
+    changeView('normal');
+}
+
+function updateColorPalette(category) {
+    const paletteContainer = document.getElementById('color-palette');
+    if (!paletteContainer) return;
+    paletteContainer.innerHTML = '';
+    const colors = PALETTES[category];
+    if (!colors) return;
+    Object.entries(colors).forEach(([name, colorData]) => {
+        const swatch = document.createElement('div');
+        swatch.classList.add('color-swatch');
+        swatch.style.setProperty('--swatch-color', colorData.hex);
+        if (category === 'chasis') {
+            swatch.classList.add('metallic');
+        }
+        swatch.title = name;
+        if (chosenColors[category] === name) {
+            swatch.classList.add('selected');
+        }
+        swatch.addEventListener('click', () => {
+            if (!state.selectedForColoring) {
+                 if (state.currentView === 'chasis' && state.selectable.chasis.length > 0) {
+                     // Auto-selecciona el chasis si no hay nada seleccionado
+                     state.selectedForColoring = state.selectable.chasis;
+                 } else {
+                     alert("Haz clic en una pieza para seleccionarla antes de elegir un color.");
+                     return;
+                 }
+            }
+            // Aplica el color a todas las piezas seleccionadas (que ahora es una sola)
+            state.selectedForColoring.material.color.set(colorData.hex);
+            
+            // Actualiza el nombre del color guardado (esto necesita ser más inteligente)
+            // Esta parte es compleja con selección individual, por ahora se simplifica
+        });
     // ========================================================
 
     changeView('normal');
