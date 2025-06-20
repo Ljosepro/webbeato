@@ -22,7 +22,7 @@ const CAMERA_VIEWS = {
     normal: { pos: new THREE.Vector3(2, 1, -0.1), target: new THREE.Vector3(0, -0.5, -0.1) },
     top:     { pos: new THREE.Vector3(1, 2, -0.6), target: new THREE.Vector3(-0.1, -0.8, -0.6) },
 };
-const MODEL_PATH = 'Models/BEATO3.glb'; 
+const MODEL_PATH = './models/BEATO3.glb'; 
 let scene, camera, renderer, controls, clock, model;
 let chosenColors = { chasis: 'Gris', buttons: 'Amarillo', knobs: 'Negro' };
 let state = {
@@ -159,14 +159,28 @@ function setupUI() {
     document.getElementById('btn-chasis').addEventListener('click', () => changeView('chasis'));
     document.getElementById('btn-buttons').addEventListener('click', () => changeView('buttons'));
     document.getElementById('btn-knobs').addEventListener('click', () => changeView('knobs'));
+
+    // ========================================================
+    // ===== AQUÍ ESTÁ LA LÓGICA DEL BOTÓN 'COMPRAR' ======
+    // ========================================================
     document.getElementById('btn-comprar').addEventListener('click', () => {
-        const yourEmail = "tu-email@dominio.com";
+        // ¡¡RECUERDA CAMBIAR ESTO POR TU EMAIL REAL!!
+        const yourEmail = "tu-email@dominio.com"; 
+        
         const subject = "Nuevo Pedido de Controlador Personalizado";
-        const chasisColorName = Object.keys(PALETTES.unified).find(name => PALETTES.unified[name].hex.toLowerCase() === '#' + state.selectable.chasis[0].material.color.getHexString()) || "No definido";
-        const body = `¡Hola!\n\nMe gustaría realizar un pedido con la siguiente configuración:\n\n- Color de Chasis: ${chasisColorName}\n- (Los colores de botones y knobs se ven en la captura adjunta)\n\nGracias.`;
+        
+        // Se buscan los nombres de los colores seleccionados para el email
+        const chasisColorName = Object.keys(PALETTES.chasis).find(name => PALETTES.chasis[name].hex === '#' + state.selectable.chasis[0].material.color.getHexString().toLowerCase()) || "No definido";
+        const buttonsColorName = Object.keys(PALETTES.buttons).find(name => PALETTES.buttons[name].hex === '#' + state.selectable.buttons[0].material.color.getHexString().toLowerCase()) || "No definido";
+        const knobsColorName = Object.keys(PALETTES.knobs).find(name => PALETTES.knobs[name].hex === '#' + state.selectable.knobs[0].material.color.getHexString().toLowerCase()) || "No definido";
+
+        const body = `¡Hola!\n\nMe gustaría realizar un pedido con la siguiente configuración:\n\n- Color de Chasis: ${chasisColorName}\n- Color de Botones: ${buttonsColorName}\n- Color de Knobs: ${knobsColorName}\n\nGracias.`;
+        
         const mailtoLink = `mailto:${yourEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         window.location.href = mailtoLink;
     });
+    // ========================================================
+
     changeView('normal');
 }
 
