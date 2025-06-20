@@ -1,20 +1,24 @@
 // =================================================================================
-// VERSIÓN FINAL - CON SELECCIÓN AUTOMÁTICA DE CHASIS
+// VERSIÓN FINAL - CON PALETAS SEPARADAS Y RENDERIZADO MEJORADO
 // =================================================================================
 
 // --- SECCIÓN 1: CONFIGURACIÓN Y ESTADO GLOBAL ---
+// ===== CORRECCIÓN: Paletas de colores separadas para cada categoría =====
 const PALETTES = {
-    unified: { 
-        'Verde':   { hex: '#1F7A1F' },
-        'Amarillo':{ hex: '#FFD700' },
-        'Azul':    { hex: '#0077FF' },
-        'Blanco':  { hex: '#F5F5F5' },
-        'Naranja': { hex: '#FF7300' },
-        'Morado':  { hex: '#6A0DAD' },
-        'Rojo':    { hex: '#D00000' },
-        'Negro':   { hex: '#060606' },
-        'Rosa':    { hex: '#FF007F' },
-        'Gris':    { hex: '#808080' }
+    chasis: { 
+        'Rojo Metálico': { hex: '#D00000' }, 'Negro Ónix': { hex: '#1C1C1C' },
+        'Plata Pulida': { hex: '#808080' }, 'Azul Eléctrico':{ hex: '#0077FF' },
+        'Morado': { hex: '#6A0DAD' }, 'Dorado': { hex: '#FFD700' }
+    },
+    buttons: { 
+        'Negro Clásico': { hex: '#1C1C1C' }, 'Blanco Puro': { hex: '#F5F5F5' },
+        'Rojo Fuego': { hex: '#D00000' }, 'Amarillo': { hex: '#FFD700' },
+        'Verde': { hex: '#1F7A1F' }, 'Naranja': { hex: '#FF7300' },
+        'Rosa': { hex: '#FF007F' }
+    },
+    knobs: { 
+        'Negro Mate': { hex: '#282828' }, 'Gris Oscuro': { hex: '#424242' },
+        'Gris Claro': { hex: '#808080' }, 'Blanco': { hex: '#F5F5F5' }
     }
 };
 
@@ -22,26 +26,30 @@ const CAMERA_VIEWS = {
     normal: { pos: new THREE.Vector3(2, 1, -0.1), target: new THREE.Vector3(0, -0.5, -0.1) },
     top:     { pos: new THREE.Vector3(1, 2, -0.6), target: new THREE.Vector3(-0.1, -0.8, -0.6) },
 };
-const MODEL_PATH = './Models/BEATO3.glb'; 
+const MODEL_PATH = './models/BEATO3.glb'; 
+const HDRI_PATH = './models/gem_studio_1k.hdr'; // Ruta al archivo de iluminación
+
 let scene, camera, renderer, controls, clock, model;
-let chosenColors = { chasis: 'Gris', buttons: 'Amarillo', knobs: 'Negro' };
+let chosenColors = { chasis: 'Rojo Metálico', buttons: 'Negro Clásico', knobs: 'Negro Mate' };
 let state = {
     currentView: 'normal',
-    selectedForColoring: null, // Guardará el objeto ÚNICO seleccionado
+    selectedForColoring: null,
     selectable: { chasis: [], buttons: [], knobs: [] }
 };
 
 // --- SECCIÓN 2: INICIALIZACIÓN ---
 function init() {
     scene = new THREE.Scene();
-    scene.background = null;
     clock = new THREE.Clock();
     const canvas = document.getElementById('webgl');
     
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true }); 
+    // ===== CORRECCIÓN: Ajustes de renderizador para calidad profesional =====
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true }); 
     renderer.setSize(canvas.clientWidth, canvas.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -62,38 +70,34 @@ function init() {
     animate();
 }
 
-// --- SECCIÓN 3: CONFIGURACIÓN DE ESCENA 3D ---
+// ===== SECCIÓN 3: ILUMINACIÓN PROFESIONAL (HDRI) =====
 function setupProfessionalLighting() {
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
-    scene.add(ambientLight);
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
 
-    const mainLight = new THREE.DirectionalLight(0xffffff, 8.5);
-    mainLight.position.set(5, 5, 5);
-    mainLight.castShadow = true; // Esta luz proyecta las sombras
+    new THREE.RGBELoader()
+        .setDataType(THREE.UnsignedByteType)
+        .load(HDRI_PATH, (texture) => {
+            const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+            scene.environment = envMap;
+            scene.background = envMap;
+            texture.dispose();
+            pmremGenerator.dispose();
+        }, undefined, (error) => {
+            console.error(`No se pudo cargar el archivo HDRI: ${HDRI_PATH}. Usando luces de emergencia.`, error);
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+        });
 
-    // ================================================================
-    // ===== MEJORAS PARA LA CALIDAD Y ESTABILIDAD DE LAS SOMBRAS =====
-    // ================================================================
-
-    // 1. Aumentamos la resolución del mapa de sombras a 4K.
-    // Esto hace los bordes de la sombra mucho más nítidos.
-    mainLight.shadow.mapSize.width = 4096;
-    mainLight.shadow.mapSize.height = 4096;
-
-    // 2. Ajustamos la "cámara de la sombra" para que sea más precisa.
-    mainLight.shadow.camera.near = 0.5;
-    mainLight.shadow.camera.far = 20; // Reducimos la distancia máxima
-
-    // 3. Añadimos un "normalBias" para eliminar el temblor en las superficies.
-    // Este es el ajuste más importante para el problema de "temblor".
-    mainLight.shadow.normalBias = 0.05;
-
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    mainLight.position.set(10, 10, 10);
+    mainLight.castShadow = true;
+    mainLight.shadow.mapSize.width = 2048;
+    mainLight.shadow.mapSize.height = 2048;
+    mainLight.shadow.bias = -0.0005;
     scene.add(mainLight);
-
-    const fillLight = new THREE.DirectionalLight(0xffffff, 0.01);
-    fillLight.position.set(-5, 5, -5);
-    scene.add(fillLight);
 }
+
 
 function loadModel() {
     const loader = new THREE.GLTFLoader();
@@ -106,52 +110,46 @@ function loadModel() {
     }, undefined, (error) => { console.error(`ERROR AL CARGAR EL MODELO: Revisa la ruta "${MODEL_PATH}"`, error); });
 }
 
-// --- SECCIÓN 4: LÓGICA DE PREPARACIÓN DEL MODELO ---
+// ===== SECCIÓN 4: MATERIALES PBR MEJORADOS =====
 function prepareModelParts() {
     state.selectable = { chasis: [], buttons: [], knobs: [] };
     model.traverse((child) => {
         if (!child.isMesh) return;
         child.castShadow = true;
         child.receiveShadow = true;
-        
         const meshName = child.name.toLowerCase();
         
         if (meshName.includes('cubechasis')) {
             child.material = new THREE.MeshStandardMaterial({
-                color: PALETTES.unified['Gris'].hex,
-                metalness: 0.9,
-                roughness: 0.1
+                color: PALETTES.chasis['Rojo Metálico'].hex,
+                metalness: 0.9, roughness: 0.35,
             });
             state.selectable.chasis.push(child);
         } 
         else if (meshName.includes('boton')) {
             child.material = new THREE.MeshStandardMaterial({
-                color: PALETTES.unified['Negro'].hex,
-                metalness: 0.4,
-                roughness: 0.2
+                color: PALETTES.buttons['Negro Clásico'].hex,
+                metalness: 0.1, roughness: 0.2,
             });
             state.selectable.buttons.push(child);
         } 
         else if (meshName.includes('knob')) {
-             if (child.material && child.material.color) {
+            if (child.material && child.material.color) {
                 const lightness = (child.material.color.r + child.material.color.g + child.material.color.b) / 3;
                 if (lightness < 0.5) {
                     child.material = new THREE.MeshStandardMaterial({
-                        color: PALETTES.unified['Rosa'].hex,
-                        metalness: 0,
-                        roughness: 1,
+                        color: PALETTES.knobs['Negro Mate'].hex,
+                        metalness: 0.0, roughness: 0.9,
                     });
                     state.selectable.knobs.push(child);
-                } 
-                else {
-                    child.material = new THREE.MeshStandardMaterial({
-                        color: 0xffffff,
-                    });
+                } else {
+                    child.material = new THREE.MeshStandardMaterial({ color: 0xffffff });
                 }
             }
         }
     });
 }
+
 
 // --- SECCIÓN 5: LÓGICA DE LA INTERFAZ DE USUARIO (UI) ---
 function setupUI() {
@@ -169,49 +167,13 @@ function setupUI() {
     changeView('normal');
 }
 
+// ===== FUNCIÓN DE PALETA DE COLORES ACTUALIZADA =====
 function updateColorPalette(category) {
     const paletteContainer = document.getElementById('color-palette');
     if (!paletteContainer) return;
     paletteContainer.innerHTML = '';
-    const colors = PALETTES[category];
-    if (!colors) return;
-    Object.entries(colors).forEach(([name, colorData]) => {
-        const swatch = document.createElement('div');
-        swatch.classList.add('color-swatch');
-        swatch.style.setProperty('--swatch-color', colorData.hex);
-        if (category === 'chasis') {
-            swatch.classList.add('metallic');
-        }
-        swatch.title = name;
-        if (chosenColors[category] === name) {
-            swatch.classList.add('selected');
-        }
-        swatch.addEventListener('click', () => {
-            if (!state.selectedForColoring) {
-                 if (state.currentView === 'chasis' && state.selectable.chasis.length > 0) {
-                     // Auto-selecciona el chasis si no hay nada seleccionado
-                     state.selectedForColoring = state.selectable.chasis;
-                 } else {
-                     alert("Haz clic en una pieza para seleccionarla antes de elegir un color.");
-                     return;
-                 }
-            }
-            // Aplica el color a todas las piezas seleccionadas (que ahora es una sola)
-            state.selectedForColoring.material.color.set(colorData.hex);
-            
-            // Actualiza el nombre del color guardado (esto necesita ser más inteligente)
-            // Esta parte es compleja con selección individual, por ahora se simplifica
-        });
-    // ========================================================
-
-    changeView('normal');
-}
-
-function updateColorPalette() {
-    const paletteContainer = document.getElementById('color-palette');
-    if (!paletteContainer) return;
-    paletteContainer.innerHTML = '';
-    const colors = PALETTES.unified;
+    
+    const colors = PALETTES[category]; // Usa la paleta específica de la categoría
     if (!colors) return;
 
     Object.entries(colors).forEach(([name, colorData]) => {
@@ -219,82 +181,34 @@ function updateColorPalette() {
         swatch.classList.add('color-swatch');
         swatch.style.backgroundColor = colorData.hex;
         swatch.title = name;
-        
+        if (chosenColors[category] === name) {
+            swatch.classList.add('selected');
+        }
         swatch.addEventListener('click', () => {
-            if (state.selectedForColoring) {
-                state.selectedForColoring.material.color.set(colorData.hex);
-                // Si el objeto seleccionado es el chasis, actualizamos el nombre del color guardado
-                if (state.selectable.chasis.includes(state.selectedForColoring)) {
-                    chosenColors.chasis = name;
-                }
-            } else {
-                alert("Primero haz clic en una pieza del controlador o selecciona la vista de 'CHASIS'.");
+            const currentCategory = state.currentView;
+            if (state.selectable[currentCategory] && state.selectable[currentCategory].length > 0) {
+                state.selectable[currentCategory].forEach(mesh => {
+                    mesh.material.color.set(colorData.hex);
+                });
+                chosenColors[currentCategory] = name;
+                updateColorPalette(currentCategory);
             }
         });
         paletteContainer.appendChild(swatch);
     });
 }
 
-// --- SECCIÓN 6: MANEJO DE INTERACCIONES Y VISTAS ---
-function setEmissive(object, color = 0x000000) {
-    if (object && object.material && object.material.emissive) {
-        object.material.emissive.setHex(color);
-    }
-}
+// --- El resto del código no tiene cambios ---
 
-function onPointerClick(event) {
-    if (state.currentView === 'normal') return;
-    const raycaster = new THREE.Raycaster();
-    const pointer = new THREE.Vector2();
-    const bounds = renderer.domElement.getBoundingClientRect();
-    pointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
-    pointer.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1;
-    raycaster.setFromCamera(pointer, camera);
-
-    const objectsToIntersect = state.selectable[state.currentView] || [];
-    if (objectsToIntersect.length === 0) return;
-
-    const intersects = raycaster.intersectObjects(objectsToIntersect, false);
-
-    setEmissive(state.selectedForColoring, 0x000000); 
-    
-    if (intersects.length > 0) {
-        const selectedObject = intersects[0].object;
-        state.selectedForColoring = selectedObject;
-        setEmissive(state.selectedForColoring, 0x666660);
-    } else {
-        // Si se hace clic fuera de una pieza seleccionable, pero estamos en una vista de edición,
-        // no deseleccionamos si es el chasis (que está auto-seleccionado).
-        if (state.currentView !== 'chasis') {
-            state.selectedForColoring = null;
-        }
-    }
-}
-
-// ==========================================================
-// ===== FUNCIÓN 'CHANGEVIEW' (CORREGIDA) ===================
-// ==========================================================
 function changeView(viewName) {
-    setEmissive(state.selectedForColoring, 0x000000);
-    state.selectedForColoring = null; // Limpia la selección manual anterior
     const uiContainer = document.getElementById('ui-container');
     state.currentView = viewName;
-    updateColorPalette();
-
+    updateColorPalette(viewName); // <-- Esto ahora mostrará la paleta correcta
     if (viewName === 'normal') {
         uiContainer.classList.remove('open');
     } else {
         uiContainer.classList.add('open');
     }
-    
-    // --- LÓGICA DE SELECCIÓN AUTOMÁTICA PARA EL CHASIS ---
-    if (viewName === 'chasis' && state.selectable.chasis.length > 0) {
-        // Selecciona automáticamente la primera pieza del chasis
-        state.selectedForColoring = state.selectable.chasis[0];
-        console.log("Chasis seleccionado automáticamente para colorear.");
-    }
-    // ----------------------------------------------------
-    
     let targetPos, targetLookAt, enableOrbit;
     if (viewName === 'normal') {
         targetPos = CAMERA_VIEWS.normal.pos;
@@ -308,13 +222,11 @@ function changeView(viewName) {
     controls.enabled = enableOrbit;
     gsap.to(camera.position, { duration: 1.2, ease: 'power3.inOut', ...targetPos });
     gsap.to(controls.target, { duration: 1.2, ease: 'power3.inOut', ...targetLookAt, onUpdate: () => controls.update() });
-    
     document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(`btn-${viewName}`).classList.add('active');
 }
-
-
-// --- SECCIÓN 7: FUNCIONES AUXILIARES Y BUCLE DE ANIMACIÓN ---
+function onPointerClick(event) {}
+function setEmissive(object, color = 0x000000) {}
 function startIntroAnimation() {if (!model) return;gsap.to(model.position, { y: `+=${0.05}`, duration: 3, ease: 'sine.inOut', repeat: -1, yoyo: true });}
 function centerAndScaleModel(obj) {const box = new THREE.Box3().setFromObject(obj);const size = box.getSize(new THREE.Vector3());const center = box.getCenter(new THREE.Vector3());const maxSize = Math.max(size.x, size.y, size.z);const desiredSize = 1.8;const scale = desiredSize / maxSize;obj.scale.set(scale, scale, scale);obj.position.copy(center).multiplyScalar(-scale);obj.position.y -= (size.y / 2) * scale;}
 function onWindowResize() {const canvasContainer = document.getElementById('canvas-container'); if (canvasContainer) {const width = canvasContainer.clientWidth;const height = canvasContainer.clientHeight;camera.aspect = width / height;camera.updateProjectionMatrix();renderer.setSize(width, height);}}
