@@ -165,7 +165,7 @@ function setupUI() {
     // ========================================================
     document.getElementById('btn-comprar').addEventListener('click', () => {
         // ¡¡RECUERDA CAMBIAR ESTO POR TU EMAIL REAL!!
-        const yourEmail = "tu-email@dominio.com"; 
+        const yourEmail = "andrewsdrums250@gmail.com"; 
         
         const subject = "Nuevo Pedido de Controlador Personalizado";
         
