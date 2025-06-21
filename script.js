@@ -22,7 +22,7 @@ const CAMERA_VIEWS = {
     normal: { pos: new THREE.Vector3(2, 1, -0.1), target: new THREE.Vector3(0, -0.5, -0.1) },
     top:     { pos: new THREE.Vector3(1, 2, -0.6), target: new THREE.Vector3(-0.1, -0.8, -0.6) },
 };
-const MODEL_PATH = 'Models/BEATO3.glb'; 
+const MODEL_PATH = './models/BEATO3.glb'; 
 let scene, camera, renderer, controls, clock, model;
 let chosenColors = { chasis: 'Gris', buttons: 'Amarillo', knobs: 'Negro' };
 let state = {
@@ -251,11 +251,13 @@ function onPointerClick(event) {
 // ===== FUNCIÓN 'CHANGEVIEW' (CORREGIDA) ===================
 // ==========================================================
 function changeView(viewName) {
-    setEmissive(state.selectedForColoring, 0x000000);
-    state.selectedForColoring = null; // Limpia la selección manual anterior
     const uiContainer = document.getElementById('ui-container');
+    const leftTitle = document.getElementById('left-column-title');
+    const rightTitle = document.getElementById('right-column-title');
+    
     state.currentView = viewName;
-    updateColorPalette();
+    updateColorPalette(viewName);
+
 
     if (viewName === 'normal') {
         uiContainer.classList.remove('open');
