@@ -160,13 +160,25 @@ function setupUI() {
     document.getElementById('btn-buttons').addEventListener('click', () => changeView('buttons'));
     document.getElementById('btn-knobs').addEventListener('click', () => changeView('knobs'));
 
-    // ========================================================
-    // ===== AQUÍ ESTÁ LA LÓGICA DEL BOTÓN 'COMPRAR' ======
-    // ========================================================
-    document.getElementById('btn-comprar').addEventListener('click', () => {
-        // ¡¡RECUERDA CAMBIAR ESTO POR TU EMAIL REAL!!
-        const yourEmail = "andrewsdrums250@gmail.com"; 
-        
+   // ========================================================
+// ===== LÓGICA CORREGIDA PARA CONECTAR CON EL CARRITO DE WIX ======
+// ========================================================
+document.getElementById('btn-comprar').addEventListener('click', () => {
+    // 1. Prepara un "paquete" de datos con los colores que el cliente ha elegido.
+    //    Usamos el objeto 'chosenColors' que ya guarda los nombres.
+    const selectionData = {
+        type: 'addToCart', // Un identificador para que el código Velo sepa qué hacer.
+        chasis: chosenColors.chasis,
+        buttons: chosenColors.buttons,
+        knobs: chosenColors.knobs
+    };
+    
+    // 2. Envía los datos como un mensaje a la página de Wix.
+    window.parent.postMessage(selectionData, "*");
+    
+    // 3. Muestra una confirmación al usuario para que sepa que funcionó.
+    alert("¡Añadido al carrito!"); 
+});
         const subject = "Nuevo Pedido de Controlador Personalizado";
         
         // Se buscan los nombres de los colores seleccionados para el email
