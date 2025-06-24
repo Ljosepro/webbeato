@@ -22,7 +22,7 @@ const CAMERA_VIEWS = {
     normal: { pos: new THREE.Vector3(2, 1, -0.1), target: new THREE.Vector3(0, -0.5, -0.1) },
     top:     { pos: new THREE.Vector3(1, 2, -0.6), target: new THREE.Vector3(-0.1, -0.8, -0.6) },
 };
-const MODEL_PATH = 'Models/BEATO3.glb'; 
+const MODEL_PATH = './models/BEATO3.glb'; 
 let scene, camera, renderer, controls, clock, model;
 let chosenColors = { chasis: 'Gris', buttons: 'Amarillo', knobs: 'Negro' };
 let state = {
@@ -150,42 +150,24 @@ function setupUI() {
     document.getElementById('btn-knobs').addEventListener('click', () => changeView('knobs'));
 
     // ===================================================================
-    // ===== LÓGICA CORREGIDA DEL BOTÓN DE COMPRAR =======================
+    // ===== CÓDIGO DE PRUEBA TEMPORAL PARA DEPURACIÓN ===================
     // ===================================================================
     document.getElementById('btn-comprar').addEventListener('click', () => {
-        const boton = document.getElementById('btn-comprar');
-        boton.textContent = 'PROCESANDO...';
-        boton.disabled = true;
+        console.log("Botón de prueba presionado. Enviando mensaje simple a Wix...");
 
-        const elementoACapturar = document.getElementById('canvas-container');
+        // Este alert es para confirmar que el clic funciona 100%
+        alert("Enviando mensaje de prueba a Wix...");
 
-        html2canvas(elementoACapturar, {
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: null
-        }).then(canvas => {
-            const imageDataUrl = canvas.toDataURL('image/png');
+        const datosDePrueba = {
+            type: 'addToCart', // Mantenemos el tipo para que el 'if' en Velo funcione
+            mensaje: 'Hola Wix, esto es una prueba simple.',
+            timestamp: new Date()
+        };
 
-            const selectionData = {
-                type: 'addToCart',
-                chasis: chosenColors.chasis,
-                buttons: chosenColors.buttons,
-                knobs: chosenColors.knobs,
-                screenshot: imageDataUrl
-            };
-            
-            // Envía el mensaje a la página de Wix.
-            // La página de Wix es ahora 100% responsable de notificar al usuario.
-            window.parent.postMessage(selectionData, "*");
-            console.log("Datos enviados a Wix. El configurador ha terminado su trabajo.");
-
-        }).catch(error => {
-            console.error("Error al generar la captura de pantalla:", error);
-            alert("Hubo un problema al generar la vista previa. Por favor, recarga la página e intenta de nuevo.");
-            // Si la captura falla, restauramos el botón.
-            boton.textContent = 'AÑADIR AL CARRITO';
-            boton.disabled = false;
-        });
+        // Enviamos el mensaje de prueba simple
+        window.parent.postMessage(datosDePrueba, "*");
+        
+        console.log("Mensaje de prueba enviado a la ventana padre.");
     });
     // ===================================================================
 
