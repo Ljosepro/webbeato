@@ -22,7 +22,7 @@ const CAMERA_VIEWS = {
     normal: { pos: new THREE.Vector3(2, 1, -0.1), target: new THREE.Vector3(0, -0.5, -0.1) },
     top:     { pos: new THREE.Vector3(1, 2, -0.6), target: new THREE.Vector3(-0.1, -0.8, -0.6) },
 };
-const MODEL_PATH = 'Models/BEATO3.glb'; 
+const MODEL_PATH = './models/BEATO3.glb'; 
 let scene, camera, renderer, controls, clock, model;
 let chosenColors = { chasis: 'Gris', buttons: 'Amarillo', knobs: 'Negro' };
 let state = {
@@ -160,25 +160,53 @@ function setupUI() {
     document.getElementById('btn-buttons').addEventListener('click', () => changeView('buttons'));
     document.getElementById('btn-knobs').addEventListener('click', () => changeView('knobs'));
 
-    // ========================================================
-    // ===== AQUÍ ESTÁ LA LÓGICA DEL BOTÓN 'COMPRAR' ======
-    // ========================================================
+    // ===================================================================
+    // ===== LÓGICA MODIFICADA DEL BOTÓN PARA AÑADIR PANTALLAZO ======
+    // ===================================================================
     document.getElementById('btn-comprar').addEventListener('click', () => {
-    // 1. Prepara un "paquete" de datos con los colores elegidos.
-    const selectionData = {
-        type: 'addToCart', // Un identificador para que Wix sepa qué hacer.
-        chasis: chosenColors.chasis,
-        buttons: chosenColors.buttons,
-        knobs: chosenColors.knobs
-    };
-    
-    // 2. Envía los datos como un mensaje a la página de Wix.
-    window.parent.postMessage(selectionData, "*");
-    
-    // 3. Muestra una confirmación al usuario.
-    alert("¡Añadido al carrito!"); 
-});
-    // ========================================================
+        const boton = document.getElementById('btn-comprar');
+        boton.textContent = 'PROCESANDO...';
+        boton.disabled = true;
+
+        // El objetivo de la captura es el contenedor del canvas
+        const elementoACapturar = document.getElementById('canvas-container');
+
+        html2canvas(elementoACapturar, {
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: null // Mantiene el fondo transparente del canvas
+        }).then(canvas => {
+            // Convierte el canvas en una imagen en formato de texto (Data URL)
+            const imageDataUrl = canvas.toDataURL('image/png');
+
+            // 1. Prepara el paquete de datos con colores y la captura.
+            const selectionData = {
+                type: 'addToCart', // Identificador para que Wix sepa qué hacer.
+                chasis: chosenColors.chasis,
+                buttons: chosenColors.buttons,
+                knobs: chosenColors.knobs,
+                screenshot: imageDataUrl // ¡Aquí está la imagen!
+            };
+            
+            // 2. Envía los datos como un mensaje a la página de Wix.
+            window.parent.postMessage(selectionData, "*");
+            
+            // 3. Muestra una confirmación al usuario.
+            alert("¡Tu configuración personalizada ha sido añadida al carrito!"); 
+            
+            // Restaura el botón a su estado original
+            boton.textContent = 'AÑADIR AL CARRITO';
+            boton.disabled = false;
+
+        }).catch(error => {
+            console.error("Error al generar la captura de pantalla:", error);
+            alert("Hubo un problema al generar la vista previa. Por favor, intenta de nuevo.");
+            // Restaura el botón también si hay un error
+            boton.textContent = 'AÑADIR AL CARRITO';
+            boton.disabled = false;
+        });
+    });
+    // ===================================================================
 
     changeView('normal');
 }
