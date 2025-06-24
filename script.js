@@ -1,6 +1,6 @@
-// =================================================================================
-// VERSIÓN FINAL - CON SELECCIÓN AUTOMÁTICA DE CHASIS
-// =================================================================================
+// ===================================================================
+// ===== CÓDIGO DEFINITIVO PARA script.js ============================
+// ===================================================================
 
 // --- SECCIÓN 1: CONFIGURACIÓN Y ESTADO GLOBAL ---
 const PALETTES = {
@@ -22,12 +22,12 @@ const CAMERA_VIEWS = {
     normal: { pos: new THREE.Vector3(2, 1, -0.1), target: new THREE.Vector3(0, -0.5, -0.1) },
     top:     { pos: new THREE.Vector3(1, 2, -0.6), target: new THREE.Vector3(-0.1, -0.8, -0.6) },
 };
-const MODEL_PATH = 'Models/BEATO3.glb'; 
+const MODEL_PATH = './models/BEATO3.glb'; 
 let scene, camera, renderer, controls, clock, model;
 let chosenColors = { chasis: 'Gris', buttons: 'Amarillo', knobs: 'Negro' };
 let state = {
     currentView: 'normal',
-    selectedForColoring: null, // Guardará el objeto ÚNICO seleccionado
+    selectedForColoring: null, 
     selectable: { chasis: [], buttons: [], knobs: [] }
 };
 
@@ -37,7 +37,7 @@ function init() {
     scene.background = null;
     clock = new THREE.Clock();
     const canvas = document.getElementById('webgl');
-    
+
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true }); 
     renderer.setSize(canvas.clientWidth, canvas.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -52,11 +52,11 @@ function init() {
     controls.enableDamping = true;
     controls.minDistance = 2;
     controls.maxDistance = 5;
-    
+
     setupProfessionalLighting();
     loadModel();
     setupUI();
-    
+
     window.addEventListener('resize', onWindowResize);
     canvas.addEventListener('click', onPointerClick);
     animate();
@@ -102,9 +102,9 @@ function prepareModelParts() {
         if (!child.isMesh) return;
         child.castShadow = true;
         child.receiveShadow = true;
-        
+
         const meshName = child.name.toLowerCase();
-        
+
         if (meshName.includes('cubechasis')) {
             child.material = new THREE.MeshStandardMaterial({
                 color: PALETTES.unified['Gris'].hex,
@@ -149,27 +149,38 @@ function setupUI() {
     document.getElementById('btn-buttons').addEventListener('click', () => changeView('buttons'));
     document.getElementById('btn-knobs').addEventListener('click', () => changeView('knobs'));
 
-    // ===================================================================
-    // ===== CÓDIGO DE PRUEBA TEMPORAL PARA DEPURACIÓN ===================
-    // ===================================================================
     document.getElementById('btn-comprar').addEventListener('click', () => {
-        console.log("Botón de prueba presionado. Enviando mensaje simple a Wix...");
+        const boton = document.getElementById('btn-comprar');
+        boton.textContent = 'PROCESANDO...';
+        boton.disabled = true;
 
-        // Este alert es para confirmar que el clic funciona 100%
-        alert("Enviando mensaje de prueba a Wix...");
+        const elementoACapturar = document.getElementById('canvas-container');
 
-        const datosDePrueba = {
-            type: 'addToCart', // Mantenemos el tipo para que el 'if' en Velo funcione
-            mensaje: 'Hola Wix, esto es una prueba simple.',
-            timestamp: new Date()
-        };
+        html2canvas(elementoACapturar, {
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: null
+        }).then(canvas => {
+            const imageDataUrl = canvas.toDataURL('image/png');
 
-        // Enviamos el mensaje de prueba simple
-        window.parent.postMessage(datosDePrueba, "*");
-        
-        console.log("Mensaje de prueba enviado a la ventana padre.");
+            const selectionData = {
+                type: 'addToCart',
+                chasis: chosenColors.chasis,
+                buttons: chosenColors.buttons,
+                knobs: chosenColors.knobs,
+                screenshot: imageDataUrl
+            };
+
+            window.parent.postMessage(selectionData, "*");
+            console.log("Datos enviados a Wix. El configurador ha terminado su trabajo.");
+
+        }).catch(error => {
+            console.error("Error al generar la captura de pantalla:", error);
+            alert("Hubo un problema al generar la vista previa. Por favor, recarga la página e intenta de nuevo.");
+            boton.textContent = 'AÑADIR AL CARRITO';
+            boton.disabled = false;
+        });
     });
-    // ===================================================================
 
     changeView('normal');
 }
@@ -186,7 +197,7 @@ function updateColorPalette() {
         swatch.classList.add('color-swatch');
         swatch.style.backgroundColor = colorData.hex;
         swatch.title = name;
-        
+
         swatch.addEventListener('click', () => {
             if (state.selectedForColoring) {
                 state.selectedForColoring.material.color.set(colorData.hex);
@@ -223,7 +234,7 @@ function onPointerClick(event) {
     const intersects = raycaster.intersectObjects(objectsToIntersect, false);
 
     setEmissive(state.selectedForColoring, 0x000000); 
-    
+
     if (intersects.length > 0) {
         const selectedObject = intersects[0].object;
         state.selectedForColoring = selectedObject;
@@ -239,7 +250,7 @@ function changeView(viewName) {
     const uiContainer = document.getElementById('ui-container');
     const leftTitle = document.getElementById('left-column-title');
     const rightTitle = document.getElementById('right-column-title');
-    
+
     state.currentView = viewName;
     updateColorPalette(viewName);
 
@@ -249,12 +260,12 @@ function changeView(viewName) {
     } else {
         uiContainer.classList.add('open');
     }
-    
+
     if (viewName === 'chasis' && state.selectable.chasis.length > 0) {
         state.selectedForColoring = state.selectable.chasis[0];
         console.log("Chasis seleccionado automáticamente para colorear.");
     }
-    
+
     let targetPos, targetLookAt, enableOrbit;
     if (viewName === 'normal') {
         targetPos = CAMERA_VIEWS.normal.pos;
@@ -268,7 +279,7 @@ function changeView(viewName) {
     controls.enabled = enableOrbit;
     gsap.to(camera.position, { duration: 1.2, ease: 'power3.inOut', ...targetPos });
     gsap.to(controls.target, { duration: 1.2, ease: 'power3.inOut', ...targetLookAt, onUpdate: () => controls.update() });
-    
+
     document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(`btn-${viewName}`).classList.add('active');
 }
