@@ -1,5 +1,5 @@
 // =================================================================================
-// VERSIÓN FINAL - CON GUARDADO DE COLORES INDIVIDUAL
+// VERSIÓN FINAL - CON GUARDADO DE COLORES INDIVIDUAL Y RESET DE BOTÓN
 // =================================================================================
 
 // --- SECCIÓN 1: CONFIGURACIÓN Y ESTADO GLOBAL ---
@@ -25,11 +25,10 @@ const CAMERA_VIEWS = {
 const MODEL_PATH = 'Models/BEATO3.glb'; 
 let scene, camera, renderer, controls, clock, model;
 
-// ===== CAMBIO 1: La estructura de chosenColors ahora usa objetos para guardar múltiples colores =====
 let chosenColors = { 
     chasis: 'Gris', 
-    buttons: {}, // Guardará algo como { "Boton_1": "Rojo", "Boton_2": "Azul" }
-    knobs: {}    // Guardará algo como { "Knob_1": "Negro", "Knob_2": "Blanco" }
+    buttons: {}, 
+    knobs: {}    
 };
 let state = {
     currentView: 'normal',
@@ -114,13 +113,13 @@ function prepareModelParts() {
         if (meshName.includes('cubechasis')) {
             child.material = new THREE.MeshStandardMaterial({ color: PALETTES.unified['Gris'].hex, metalness: 0.9, roughness: 0.1 });
             state.selectable.chasis.push(child);
-            chosenColors.chasis = 'Gris'; // Asignación inicial
+            chosenColors.chasis = 'Gris';
         } 
         else if (meshName.includes('boton')) {
             const defaultColor = 'Negro';
             child.material = new THREE.MeshStandardMaterial({ color: PALETTES.unified[defaultColor].hex, metalness: 0.4, roughness: 0.2 });
             state.selectable.buttons.push(child);
-            chosenColors.buttons[child.name] = defaultColor; // Asignación inicial por nombre de pieza
+            chosenColors.buttons[child.name] = defaultColor;
         } 
         else if (meshName.includes('knob')) {
              if (child.material && child.material.color) {
@@ -129,7 +128,7 @@ function prepareModelParts() {
                     const defaultColor = 'Rosa';
                     child.material = new THREE.MeshStandardMaterial({ color: PALETTES.unified[defaultColor].hex, metalness: 0, roughness: 1 });
                     state.selectable.knobs.push(child);
-                    chosenColors.knobs[child.name] = defaultColor; // Asignación inicial por nombre de pieza
+                    chosenColors.knobs[child.name] = defaultColor;
                 } else {
                     child.material = new THREE.MeshStandardMaterial({ color: 0xffffff });
                 }
@@ -145,19 +144,32 @@ function setupUI() {
     document.getElementById('btn-buttons').addEventListener('click', () => changeView('buttons'));
     document.getElementById('btn-knobs').addEventListener('click', () => changeView('knobs'));
 
+    // ===================================================================
+    // ===== CAMBIO FINAL: LÓGICA DEL BOTÓN CON RESET AUTOMÁTICO ========
+    // ===================================================================
     document.getElementById('btn-comprar').addEventListener('click', () => {
         const boton = document.getElementById('btn-comprar');
         boton.textContent = 'PROCESANDO...';
         boton.disabled = true;
+
         const selectionData = {
             type: 'addToCart',
             chasis: chosenColors.chasis,
             buttons: chosenColors.buttons,
             knobs: chosenColors.knobs
         };
+        
         window.parent.postMessage(selectionData, "*");
         console.log("Datos de configuración detallados enviados a Wix.", selectionData);
+
+        // Restaura el botón después de 1.5 segundos para dar tiempo a que Wix reaccione
+        // y para que el usuario vea que su clic fue registrado.
+        setTimeout(() => {
+            boton.textContent = 'AÑADIR AL CARRITO';
+            boton.disabled = false;
+        }, 1500);
     });
+    // ===================================================================
 
     changeView('normal');
 }
@@ -175,13 +187,10 @@ function updateColorPalette() {
         swatch.style.backgroundColor = colorData.hex;
         swatch.title = name;
         
-        // ===== CAMBIO 2: Lógica de guardado de color actualizada =====
         swatch.addEventListener('click', () => {
             if (state.selectedForColoring) {
-                // Aplica el color visualmente
                 state.selectedForColoring.material.color.set(colorData.hex);
 
-                // Guarda el color en la estructura de datos correcta
                 const selectedName = state.selectedForColoring.name;
                 if (state.selectable.chasis.includes(state.selectedForColoring)) {
                     chosenColors.chasis = name;
@@ -247,7 +256,6 @@ function changeView(viewName) {
     if (viewName === 'chasis' && state.selectable.chasis.length > 0) {
         state.selectedForColoring = state.selectable.chasis[0];
     } else {
-        // Deselecciona la pieza si cambiamos a una vista donde no es editable
         state.selectedForColoring = null;
     }
     
