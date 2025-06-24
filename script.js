@@ -1,5 +1,5 @@
 // =================================================================================
-// VERSIÓN FINAL CORREGIDA - CON OPTIMIZACIÓN DE IMAGEN
+// VERSIÓN FINAL - ENVIANDO SOLO DATOS DE CONFIGURACIÓN
 // =================================================================================
 
 // --- SECCIÓN 1: CONFIGURACIÓN Y ESTADO GLOBAL ---
@@ -150,44 +150,29 @@ function setupUI() {
     document.getElementById('btn-knobs').addEventListener('click', () => changeView('knobs'));
 
     // ===================================================================
-    // ===== LÓGICA FINAL CON OPTIMIZACIÓN DE IMAGEN =====================
+    // ===== LÓGICA FINAL Y SIMPLIFICADA DEL BOTÓN DE COMPRAR ============
     // ===================================================================
     document.getElementById('btn-comprar').addEventListener('click', () => {
         const boton = document.getElementById('btn-comprar');
         boton.textContent = 'PROCESANDO...';
         boton.disabled = true;
 
-        const elementoACapturar = document.getElementById('canvas-container');
-
-        // Opciones para generar una imagen más ligera
-        const opcionesCanvas = {
-            scale: 1, // Escala 1x en lugar de 2x para menor resolución
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: null
+        // Preparamos los datos de los colores seleccionados.
+        const selectionData = {
+            type: 'addToCart',
+            chasis: chosenColors.chasis,
+            buttons: chosenColors.buttons,
+            knobs: chosenColors.knobs
+            // Ya no se incluye la captura de pantalla.
         };
-
-        html2canvas(elementoACapturar, opcionesCanvas).then(canvas => {
-            // Convertimos a JPEG con calidad del 80% para reducir drásticamente el tamaño
-            const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-
-            const selectionData = {
-                type: 'addToCart',
-                chasis: chosenColors.chasis,
-                buttons: chosenColors.buttons,
-                knobs: chosenColors.knobs,
-                screenshot: imageDataUrl
-            };
-            
-            window.parent.postMessage(selectionData, "*");
-            console.log("Datos con imagen optimizada enviados a Wix.");
-
-        }).catch(error => {
-            console.error("Error al generar la captura de pantalla:", error);
-            alert("Hubo un problema al generar la vista previa. Por favor, recarga la página e intenta de nuevo.");
-            boton.textContent = 'AÑADIR AL CARRITO';
-            boton.disabled = false;
-        });
+        
+        // Enviamos el objeto de texto simple a Wix, que sabemos que funciona.
+        window.parent.postMessage(selectionData, "*");
+        console.log("Datos de configuración enviados a Wix.");
+        
+        // Opcional: Puedes mostrar un alert o mensaje aquí si lo deseas,
+        // pero la página de Wix se encargará de la confirmación final.
+        // Por ejemplo: alert("Tu configuración se está procesando.");
     });
     // ===================================================================
 
