@@ -22,7 +22,7 @@ const CAMERA_VIEWS = {
     normal: { pos: new THREE.Vector3(2, 1, -0.1), target: new THREE.Vector3(0, -0.5, -0.1) },
     top:     { pos: new THREE.Vector3(1, 2, -0.6), target: new THREE.Vector3(-0.1, -0.8, -0.6) },
 };
-const MODEL_PATH = 'Models/BEATO3.glb'; 
+const MODEL_PATH = './models/BEATO3.glb'; 
 let scene, camera, renderer, controls, clock, model;
 let chosenColors = { chasis: 'Gris', buttons: 'Amarillo', knobs: 'Negro' };
 let state = {
@@ -69,23 +69,12 @@ function setupProfessionalLighting() {
 
     const mainLight = new THREE.DirectionalLight(0xffffff, 8.5);
     mainLight.position.set(5, 5, 5);
-    mainLight.castShadow = true; // Esta luz proyecta las sombras
+    mainLight.castShadow = true;
 
-    // ================================================================
-    // ===== MEJORAS PARA LA CALIDAD Y ESTABILIDAD DE LAS SOMBRAS =====
-    // ================================================================
-
-    // 1. Aumentamos la resolución del mapa de sombras a 4K.
-    // Esto hace los bordes de la sombra mucho más nítidos.
     mainLight.shadow.mapSize.width = 4096;
     mainLight.shadow.mapSize.height = 4096;
-
-    // 2. Ajustamos la "cámara de la sombra" para que sea más precisa.
     mainLight.shadow.camera.near = 0.5;
-    mainLight.shadow.camera.far = 20; // Reducimos la distancia máxima
-
-    // 3. Añadimos un "normalBias" para eliminar el temblor en las superficies.
-    // Este es el ajuste más importante para el problema de "temblor".
+    mainLight.shadow.camera.far = 20;
     mainLight.shadow.normalBias = 0.05;
 
     scene.add(mainLight);
@@ -161,47 +150,39 @@ function setupUI() {
     document.getElementById('btn-knobs').addEventListener('click', () => changeView('knobs'));
 
     // ===================================================================
-    // ===== LÓGICA MODIFICADA DEL BOTÓN PARA AÑADIR PANTALLAZO ======
+    // ===== LÓGICA CORREGIDA DEL BOTÓN DE COMPRAR =======================
     // ===================================================================
     document.getElementById('btn-comprar').addEventListener('click', () => {
         const boton = document.getElementById('btn-comprar');
         boton.textContent = 'PROCESANDO...';
         boton.disabled = true;
 
-        // El objetivo de la captura es el contenedor del canvas
         const elementoACapturar = document.getElementById('canvas-container');
 
         html2canvas(elementoACapturar, {
             useCORS: true,
             allowTaint: true,
-            backgroundColor: null // Mantiene el fondo transparente del canvas
+            backgroundColor: null
         }).then(canvas => {
-            // Convierte el canvas en una imagen en formato de texto (Data URL)
             const imageDataUrl = canvas.toDataURL('image/png');
 
-            // 1. Prepara el paquete de datos con colores y la captura.
             const selectionData = {
-                type: 'addToCart', // Identificador para que Wix sepa qué hacer.
+                type: 'addToCart',
                 chasis: chosenColors.chasis,
                 buttons: chosenColors.buttons,
                 knobs: chosenColors.knobs,
-                screenshot: imageDataUrl // ¡Aquí está la imagen!
+                screenshot: imageDataUrl
             };
             
-            // 2. Envía los datos como un mensaje a la página de Wix.
+            // Envía el mensaje a la página de Wix.
+            // La página de Wix es ahora 100% responsable de notificar al usuario.
             window.parent.postMessage(selectionData, "*");
-            
-            // 3. Muestra una confirmación al usuario.
-            alert("¡Tu configuración personalizada ha sido añadida al carrito!"); 
-            
-            // Restaura el botón a su estado original
-            boton.textContent = 'AÑADIR AL CARRITO';
-            boton.disabled = false;
+            console.log("Datos enviados a Wix. El configurador ha terminado su trabajo.");
 
         }).catch(error => {
             console.error("Error al generar la captura de pantalla:", error);
-            alert("Hubo un problema al generar la vista previa. Por favor, intenta de nuevo.");
-            // Restaura el botón también si hay un error
+            alert("Hubo un problema al generar la vista previa. Por favor, recarga la página e intenta de nuevo.");
+            // Si la captura falla, restauramos el botón.
             boton.textContent = 'AÑADIR AL CARRITO';
             boton.disabled = false;
         });
@@ -227,7 +208,6 @@ function updateColorPalette() {
         swatch.addEventListener('click', () => {
             if (state.selectedForColoring) {
                 state.selectedForColoring.material.color.set(colorData.hex);
-                // Si el objeto seleccionado es el chasis, actualizamos el nombre del color guardado
                 if (state.selectable.chasis.includes(state.selectedForColoring)) {
                     chosenColors.chasis = name;
                 }
@@ -267,17 +247,12 @@ function onPointerClick(event) {
         state.selectedForColoring = selectedObject;
         setEmissive(state.selectedForColoring, 0x666660);
     } else {
-        // Si se hace clic fuera de una pieza seleccionable, pero estamos en una vista de edición,
-        // no deseleccionamos si es el chasis (que está auto-seleccionado).
         if (state.currentView !== 'chasis') {
             state.selectedForColoring = null;
         }
     }
 }
 
-// ==========================================================
-// ===== FUNCIÓN 'CHANGEVIEW' (CORREGIDA) ===================
-// ==========================================================
 function changeView(viewName) {
     const uiContainer = document.getElementById('ui-container');
     const leftTitle = document.getElementById('left-column-title');
@@ -293,13 +268,10 @@ function changeView(viewName) {
         uiContainer.classList.add('open');
     }
     
-    // --- LÓGICA DE SELECCIÓN AUTOMÁTICA PARA EL CHASIS ---
     if (viewName === 'chasis' && state.selectable.chasis.length > 0) {
-        // Selecciona automáticamente la primera pieza del chasis
         state.selectedForColoring = state.selectable.chasis[0];
         console.log("Chasis seleccionado automáticamente para colorear.");
     }
-    // ----------------------------------------------------
     
     let targetPos, targetLookAt, enableOrbit;
     if (viewName === 'normal') {
