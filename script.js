@@ -22,7 +22,7 @@ const CAMERA_VIEWS = {
     normal: { pos: new THREE.Vector3(2, 1, -0.1), target: new THREE.Vector3(0, -0.5, -0.1) },
     top:     { pos: new THREE.Vector3(1, 2, -0.6), target: new THREE.Vector3(-0.1, -0.8, -0.6) },
 };
-const MODEL_PATH = 'Models/BEATO3.glb'; 
+const MODEL_PATH = './models/BEATO3.glb'; 
 let scene, camera, renderer, controls, clock, model;
 
 // ===== CAMBIO 1: Añadimos un 'type' al objeto para que Velo sepa qué tipo de mensaje es =====
@@ -150,9 +150,24 @@ function setupUI() {
     document.getElementById('btn-buttons').addEventListener('click', () => changeView('buttons'));
     document.getElementById('btn-knobs').addEventListener('click', () => changeView('knobs'));
 
-    // ===== CAMBIO 4: El botón de comprar dentro del configurador ya no es necesario =====
-    // Se elimina el `addEventListener` para 'btn-comprar' porque el botón ahora es nativo de Wix.
+    // REEMPLÁZALO CON ESTE BLOQUE
+document.getElementById('btn-comprar').addEventListener('click', () => {
+    // ¡¡¡IMPORTANTE: REEMPLAZA ESTA URL POR LA DE TU PÁGINA DE PRODUCTO!!!
+    const wixPageUrl = "https://www.crearttech.com/product-page/beato-8";
+    
+    // 1. Prepara los parámetros con los colores elegidos
+    const params = new URLSearchParams({
+        chasis: chosenColors.chasis,
+        buttons: chosenColors.buttons,
+        knobs: chosenColors.knobs
+    });
+    
+    // 2. Construye el enlace final
+    const finalUrl = `${wixPageUrl}?${params.toString()}`;
 
+    // 3. Redirige al cliente a la página de producto de Wix
+    window.top.location.href = finalUrl;
+});
     changeView('normal');
 }
 
