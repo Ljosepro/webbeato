@@ -153,7 +153,7 @@ function setupUI() {
     // REEMPLÁZALO CON ESTE BLOQUE
 document.getElementById('btn-comprar').addEventListener('click', () => {
     // ¡¡¡IMPORTANTE: REEMPLAZA ESTA URL POR LA DE TU PÁGINA DE PRODUCTO!!!
-    const wixPageUrl = "https://www.crearttech.com/product-page/beato-8";
+    const wixPageUrl = "https://www.crearttech.com/product-page/prueba";
     
     // 1. Prepara los parámetros con los colores elegidos
     const params = new URLSearchParams({
